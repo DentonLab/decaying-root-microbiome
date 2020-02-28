@@ -1,6 +1,7 @@
 # Welcome to the project "The rhizosphere microbial metagenome in an agricultural soil is modified by the antecedent root system"
 
 License
+
 This repo is free and open source for research usage, licensed under GNU GPLv3.
 
 Project Introduction
