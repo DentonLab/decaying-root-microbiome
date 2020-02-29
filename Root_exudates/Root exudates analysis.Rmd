@@ -1,0 +1,25 @@
+library(edgeR)
+library(ape)
+library(vegan)
+
+total<-read.table("RE_data.txt", head=TRUE)
+total<-total[,c(1:33)]
+
+group <- factor(c("x1","x1","x1","x2","x2","x2","x3","x3","x3","x4","x4","x4","x5","x5","x5","x6","x6","x6","x7","x7","x7","x8","x8","x8"))
+group <- factor(group,levels=c("x1","x2","x3","x4","x5","x6","x7","x8"))
+y <- DGEList(counts=total, group=group)
+y <- calcNormFactors(y)
+nc<-cpm(y)
+total<-t(nc)
+dist<- vegdist(total)
+pcoa<-pcoa(dist, correction= "lingoes")
+saveRDS(pcoa$values, "pcoa_values_RootExudates.RDS")
+saveRDS(pcoa$vectors, "pcoa_sites_RootExudates.RDS")
+
+env1<-read.table("env.txt",head=TRUE)
+constrain.dist.ps <- capscale(total ~ sterilized*decayingRoot*plant, env1, dist="bray", add =TRUE)
+constrain.dist.ps
+anova(constrain.dist.ps, step=999, perm.max=999)
+adonis(dist ~ sterilized*decayingRoot*plant, env1, perm=999, add =TRUE)
+
+
