@@ -1,0 +1,178 @@
+##differentially abundant analysis for OTUs
+library(edgeR)
+
+total<-read.table("otu_data.txt", head=TRUE)
+total <- total [rowSums(total > 5) > 3,]
+
+group <- factor(c("bs.u","bs.u","bs.u","re.w","re.w","re.w","bs.w","bs.w","bs.w","bs.c","bs.c","bs.c","re.c","re.c","re.c","re.u","re.u","re.u"))
+group <- factor(group,levels=c("bs.u","re.w","bs.w","bs.c","re.c","re.u"))
+design <- model.matrix(~ 0 + group)
+colnames(design) <- levels(group)
+
+y <- DGEList(counts=total, group=group)
+y <- calcNormFactors(y)
+ncc<-cpm(y)
+saveRDS(ncc, "normalised_gene_tab.RDS")
+
+y <- estimateDisp(y, design, robust=TRUE)
+fit <- glmQLFit(y, design, robust=TRUE)
+
+##differentially abundant OTUs between bulk soil and detritusphere of the decaying root
+
+con0 <- makeContrasts(re.u- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con0, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_otu_con0.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_otu_con0.RDS")
+
+##differentially abundant OTUs between bulk soil and wheat rhizosphere under the decaying root
+
+con1 <- makeContrasts(re.w- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con1, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_otu_con1.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_otu_con1.RDS")
+
+##differentially abundant OTUs between bulk soil and chickpea rhizosphere under the decaying root
+
+con2 <- makeContrasts(re.c- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con2, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_otu_con2.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_otu_con2.RDS")
+
+##differentially abundant OTUs between bulk soil and wheat rhizosphere with no decaying root
+
+con3 <- makeContrasts(bs.w- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con3, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_otu_con3.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_otu_con3.RDS")
+
+##differentially abundant OTUs between bulk soil and chickpea rhizosphere with no decaying root
+
+con4 <- makeContrasts(bs.c- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con4, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_otu_con4.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_otu_con4.RDS")
+
+##multivariate analysis for OTUs
+library(edgeR)
+library(vegan)
+library(MASS)
+library(ape)
+
+##analysing all the samples including bulk soil
+
+total<-read.table("otu_data.txt", head=TRUE)
+total <- total [rowSums(total > 5) > 3,]
+
+group <- factor(c("bs.u","bs.u","bs.u","re.w","re.w","re.w","bs.w","bs.w","bs.w","bs.c","bs.c","bs.c","re.c","re.c","re.c","re.u","re.u","re.u"))
+group <- factor(group,levels=c("bs.u","re.w","bs.w","bs.c","re.c","re.u"))
+y <- DGEList(counts=total, group=group)
+y <- calcNormFactors(y)
+total<-t(cpm(y))
+dist<- vegdist(total)
+pcoa<-pcoa(dist, correction= "lingoes")
+saveRDS(pcoa$values, " pcoa_values_18samples_gene.RDS")
+saveRDS(pcoa$vectors, " pcoa_sites_18samples_gene.RDS")
+
+env1<-read.table("env18.txt",head=TRUE)
+constrain.dist.ps <- capscale(total ~ plant_soil, env1, dist="bray", add =TRUE)
+constrain.dist.ps
+anova(constrain.dist.ps, step=999, perm.max=999)
+adonis(dist ~ plant_soil, env1, perm=999, add =TRUE)
+rm(list=ls(all=TRUE))
+
+##analysing all the samples exuding bulk soil
+
+total <- readRDS("gene_data.RDS")
+total<-total[,c(4:15)]
+total <- total [rowSums(total > 5) > 3,]
+
+group <- factor(c("re.w","re.w","re.w","bs.w","bs.w","bs.w","bs.c","bs.c","bs.c","re.c","re.c","re.c"))
+group <- factor(group,levels=c("re.w","bs.w","bs.c","re.c"))
+y <- DGEList(counts=total, group=group)
+y <- calcNormFactors(y)
+total<-t(cpm(y))
+dist<- vegdist(total)
+
+env1<-read.table("env12.txt",head=TRUE)
+
+constrain.dist.ps <- capscale(total ~ plant*soil, env1, dist="bray", add =TRUE)
+constrain.dist.ps
+save(constrain.dist.ps, file="CAP.txt")
+anova(constrain.dist.ps, step=999, perm.max=999)
+adonis(dist ~ plant+soil+plant:soil, env1, perm=999, add =TRUE)
+
+##OTUs alpha diversity analysis
+library(vegan)
+
+d<-read.table("otu_data.txt", head=TRUE)
+d <- d [rowSums(total > 5) > 3,]
+d<-t(d)
+raremax <- min(rowSums(d))
+x<-rrarefy(d, raremax)
+y<-t(x)
+diversity(x)
+diversity(x, "simpson")
+colSums(y !=0)
+estimateR(x)
+
+

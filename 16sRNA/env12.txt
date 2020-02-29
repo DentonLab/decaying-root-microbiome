@@ -1,0 +1,13 @@
+	soil	plant
+B1f	res	wheat
+B2f	res	wheat
+B3f	res	wheat
+C1f	bs	wheat
+C2f	bs	wheat
+C3f	bs	wheat
+D1f	bs	cp
+D2f	bs	cp
+D3f	bs	cp
+E1f	res	cp
+E2f	res	cp
+E3f	res	cp
