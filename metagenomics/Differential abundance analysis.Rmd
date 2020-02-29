@@ -1,6 +1,6 @@
 library(edgeR)
 
-total <- readRDS("otu_vsd_blind_expt1com_full.RDS")
+total <- readRDS("gene_data.RDS")
 total <- total [rowSums(total > 5) > 3,]
 
 group <- factor(c("bs.u","bs.u","bs.u","re.w","re.w","re.w","bs.w","bs.w","bs.w","bs.c","bs.c","bs.c","re.c","re.c","re.c","re.u","re.u","re.u"))
