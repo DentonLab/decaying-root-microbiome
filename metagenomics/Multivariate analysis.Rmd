@@ -1,0 +1,47 @@
+library(edgeR)
+library(vegan)
+library(MASS)
+library(ape)
+
+##analysing all the samples including bulk soil
+
+total <- readRDS("gene_data.RDS")
+total <- total [rowSums(total > 5) > 3,]
+
+group <- factor(c("bs.u","bs.u","bs.u","re.w","re.w","re.w","bs.w","bs.w","bs.w","bs.c","bs.c","bs.c","re.c","re.c","re.c","re.u","re.u","re.u"))
+group <- factor(group,levels=c("bs.u","re.w","bs.w","bs.c","re.c","re.u"))
+y <- DGEList(counts=total, group=group)
+y <- calcNormFactors(y)
+total<-t(cpm(y))
+dist<- vegdist(total)
+pcoa<-pcoa(dist, correction= "lingoes")
+saveRDS(pcoa$values, " pcoa_values_18samples_gene.RDS")
+saveRDS(pcoa$vectors, " pcoa_sites_18samples_gene.RDS")
+
+env1<-read.table("env18.txt",head=TRUE)
+constrain.dist.ps <- capscale(total ~ plant_soil, env1, dist="bray", add =TRUE)
+constrain.dist.ps
+anova(constrain.dist.ps, step=999, perm.max=999)
+adonis(dist ~ plant_soil, env1, perm=999, add =TRUE)
+rm(list=ls(all=TRUE))
+
+##analysing all the samples exuding bulk soil
+
+total <- readRDS("gene_data.RDS")
+total<-total[,c(4:15)]
+total <- total [rowSums(total > 5) > 3,]
+
+group <- factor(c("re.w","re.w","re.w","bs.w","bs.w","bs.w","bs.c","bs.c","bs.c","re.c","re.c","re.c"))
+group <- factor(group,levels=c("re.w","bs.w","bs.c","re.c"))
+y <- DGEList(counts=total, group=group)
+y <- calcNormFactors(y)
+total<-t(cpm(y))
+dist<- vegdist(total)
+
+env1<-read.table("env12.txt",head=TRUE)
+
+constrain.dist.ps <- capscale(total ~ plant*soil, env1, dist="bray", add =TRUE)
+constrain.dist.ps
+save(constrain.dist.ps, file="CAP.txt")
+anova(constrain.dist.ps, step=999, perm.max=999)
+adonis(dist ~ plant+soil+plant:soil, env1, perm=999, add =TRUE)
