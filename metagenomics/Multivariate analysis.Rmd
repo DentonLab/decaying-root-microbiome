@@ -25,7 +25,7 @@ anova(constrain.dist.ps, step=999, perm.max=999)
 adonis(dist ~ plant_soil, env1, perm=999, add =TRUE)
 rm(list=ls(all=TRUE))
 
-##analysing all the samples exuding bulk soil
+##analysing the samples exuding bulk soil
 
 total <- readRDS("gene_data.RDS")
 total<-total[,c(4:15)]
