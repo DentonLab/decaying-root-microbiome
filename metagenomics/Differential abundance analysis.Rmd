@@ -1,0 +1,129 @@
+library(edgeR)
+
+total <- readRDS("otu_vsd_blind_expt1com_full.RDS")
+total <- total [rowSums(total > 5) > 3,]
+
+group <- factor(c("bs.u","bs.u","bs.u","re.w","re.w","re.w","bs.w","bs.w","bs.w","bs.c","bs.c","bs.c","re.c","re.c","re.c","re.u","re.u","re.u"))
+group <- factor(group,levels=c("bs.u","re.w","bs.w","bs.c","re.c","re.u"))
+design <- model.matrix(~ 0 + group)
+colnames(design) <- levels(group)
+
+y <- DGEList(counts=total, group=group)
+y <- calcNormFactors(y)
+ncc<-cpm(y)
+saveRDS(ncc, "normalised_gene_tab.RDS")
+
+y <- estimateDisp(y, design, robust=TRUE)
+fit <- glmQLFit(y, design, robust=TRUE)
+
+##differentially abundant genes between bulk soil and detritusphere of the decaying root
+
+con0 <- makeContrasts(re.u- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con0, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+pdf(file="Fig2_con0.pdf")
+plotSmear(qlf, de.tags=DEnames,cex=0.05, xlim=c(-4,8),ylim=c(-12,12))
+dev.off()
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_gene_con0.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_gene_con0.RDS")
+
+##differentially abundant genes between bulk soil and wheat rhizosphere under the decaying root
+
+con1 <- makeContrasts(re.w- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con1, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+pdf(file="Fig2_con1.pdf")
+plotSmear(qlf, de.tags=DEnames,cex=0.05, xlim=c(-4,8),ylim=c(-12,12))
+dev.off()
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_gene_con1.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_gene_con1.RDS")
+
+##differentially abundant genes between bulk soil and chickpea rhizosphere under the decaying root
+
+con2 <- makeContrasts(re.c- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con2, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+pdf(file="Fig2_con2.pdf")
+plotSmear(qlf, de.tags=DEnames,cex=0.05, xlim=c(-4,8),ylim=c(-12,12))
+dev.off()
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_gene_con2.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_gene_con2.RDS")
+
+##differentially abundant genes between bulk soil and wheat rhizosphere with no decaying root
+
+con3 <- makeContrasts(bs.w- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con3, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+pdf(file="Fig2_con3.pdf")
+plotSmear(qlf, de.tags=DEnames,cex=0.05, xlim=c(-4,8),ylim=c(-12,12))
+dev.off()
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_gene_con3.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_gene_con3.RDS")
+
+##differentially abundant genes between bulk soil and chickpea rhizosphere with no decaying root
+
+con4 <- makeContrasts(bs.c- bs.u, levels=design)
+qlf <- glmTreat(fit, contrast=con4, lfc=1)
+summary(dt <- decideTestsDGE(qlf,p.value=0.01))
+isDE <- as.logical(dt)
+DEnames <- rownames(y)[isDE]
+pdf(file="Fig2_con4.pdf")
+plotSmear(qlf, de.tags=DEnames,cex=0.05, xlim=c(-4,8),ylim=c(-12,12))
+dev.off()
+a<-topTags(qlf,n= nrow(qlf$table))
+top <- rownames(a)
+nc<-cpm(y)[top,]
+c<-merge(a,nc,by=0)
+c = c[c$FDR < 0.01,]
+enrich = c[c$logFC >=0,]
+enrich <- data.frame(enrich[,-1], row.names= enrich[,1])
+saveRDS(enrich, "enrich_gene_con4.RDS")
+delete = c[c$logFC <0,]
+delete <- data.frame(delete [,-1], row.names= delete [,1])
+saveRDS(delete, " delete_gene_con4.RDS")
+
+
